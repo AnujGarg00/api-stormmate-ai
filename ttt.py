@@ -4,7 +4,7 @@ from openai import OpenAI
 # Replace YOUR_API_KEY_HERE with your free OpenRouter API key
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="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",
+    api_key=st.secrets["openai"]["api_key"],
 )
 
 st.title("🌩️ StormMate AI")
@@ -60,3 +60,4 @@ for sender, msg in st.session_state.chat:
             f"<span style='color:#00d4ff'>**{sender}:** {msg}</span>",
             unsafe_allow_html=True
         )
+
