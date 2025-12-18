@@ -1,22 +1,29 @@
 import streamlit as st
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://api.deepseek.com/v1",
-    api_key=st.secrets["openai"]["api_key"],
-)
+import google.generativeai as genai
 
 st.title("🌩️ StormMate AI")
+st.write("Your teen-friendly AI buddy!")
 
-# Initialize session states
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": "You are StormMate AI ⚡ – a teen-friendly chatbot. "
-         "Talk casual, supportive, and a bit playful. Use slang like 'bruh', 'fr', 'lowkey'. "
-         "Give advice on mental health, school, and career. "
-         "Always sound like a friend, never lecture. "
-         "Always give simple and short replies unless it's an important long reply."},
-    ]
+# Configure Gemini
+genai.configure(api_key=st.secrets["google"]["api_key"])
+
+# System prompt
+SYSTEM_INSTRUCTION = """You are StormMate AI ⚡ – a teen-friendly chatbot. 
+Talk casual, supportive, and a bit playful. Use slang like 'bruh', 'fr', 'lowkey'. 
+Give advice on mental health, school, and career. 
+Always sound like a friend, never lecture. 
+Always give simple and short replies unless it's an important long reply."""
+
+# Initialize Gemini model
+if "model" not in st.session_state:
+    st.session_state.model = genai.GenerativeModel(
+        model_name='gemini-1.5-flash',
+        system_instruction=SYSTEM_INSTRUCTION
+    )
+    st.session_state.chat = st.session_state.model.start_chat(history=[])
+
+# Initialize chat history for display
+if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 # Display welcome message once
@@ -34,23 +41,23 @@ for msg in st.session_state.chat_history:
 
 # Handle user input
 if prompt := st.chat_input("Type your message..."):
-    # Add user message
+    # Display user message
     st.session_state.chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
     
     # Get AI response
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=st.session_state.messages
-            )
-            reply = response.choices[0].message.content
-            st.markdown(reply)
-    
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-    st.session_state.chat_history.append({"role": "assistant", "content": reply})
-
+            try:
+                response = st.session_state.chat.send_message(prompt)
+                reply = response.text
+                st.markdown(reply)
+                
+                # Save assistant message
+                st.session_state.chat_history.append({"role": "assistant", "content": reply})
+                
+            except Exception as e:
+                error_msg = f"Yo, something went wrong bruh 😅\n\nError: {str(e)}"
+                st.error(error_msg)
+                st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
