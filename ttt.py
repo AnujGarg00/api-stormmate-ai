@@ -7,7 +7,7 @@ st.write("Your teen-friendly AI buddy!")
 # Initialize Gemini using OpenAI client
 client = OpenAI(
     api_key=st.secrets["google"]["api_key"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest"
+    base_url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
 )
 
 # System prompt
@@ -73,4 +73,5 @@ if prompt := st.chat_input("Type your message..."):
                 error_msg = f"Yo, something went wrong bruh 😅\n\nError: {str(e)}"
                 st.error(error_msg)
                 st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
+
 
