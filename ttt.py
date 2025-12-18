@@ -37,7 +37,7 @@ if prompt := st.chat_input("Type your message..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     response = client.chat.completions.create(
-        model="deepseek/deepseek-r1:free",
+        model="deepseek-chat",
         messages=st.session_state.messages
     )
 
@@ -60,5 +60,6 @@ for sender, msg in st.session_state.chat:
             f"<span style='color:#00d4ff'>**{sender}:** {msg}</span>",
             unsafe_allow_html=True
         )
+
 
 
