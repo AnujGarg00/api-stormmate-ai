@@ -1,29 +1,28 @@
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
 
 st.title("🌩️ StormMate AI")
 st.write("Your teen-friendly AI buddy!")
 
-# Configure Gemini
-genai.configure(api_key=st.secrets["google"]["api_key"])
+# Initialize Gemini using OpenAI client
+client = OpenAI(
+    api_key=st.secrets["google"]["api_key"],
+    base_url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
+)
 
 # System prompt
-SYSTEM_INSTRUCTION = """You are StormMate AI ⚡ – a teen-friendly chatbot. 
-Talk casual, supportive, and a bit playful. Use slang like 'bruh', 'fr', 'lowkey'. 
-Give advice on mental health, school, and career. 
-Always sound like a friend, never lecture. 
-Always give simple and short replies unless it's an important long reply."""
+SYSTEM_PROMPT = {
+    "role": "system",
+    "content": "You are StormMate AI ⚡ – a teen-friendly chatbot. "
+               "Talk casual, supportive, and a bit playful. Use slang like 'bruh', 'fr', 'lowkey'. "
+               "Give advice on mental health, school, and career. "
+               "Always sound like a friend, never lecture. "
+               "Always give simple and short replies unless it's an important long reply."
+}
 
-# Initialize Gemini model
-if "model" not in st.session_state:
-    st.session_state.model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
-        system_instruction=SYSTEM_INSTRUCTION
-    )
-    st.session_state.chat = st.session_state.model.start_chat(history=[])
-
-# Initialize chat history for display
-if "chat_history" not in st.session_state:
+# Initialize session states
+if "messages" not in st.session_state:
+    st.session_state.messages = []
     st.session_state.chat_history = []
 
 # Display welcome message once
@@ -31,6 +30,7 @@ if len(st.session_state.chat_history) == 0:
     with st.chat_message("assistant", avatar="🐼"):
         st.markdown("""**Team Dystopian Pandas - Demo Representation!**
 - Saves chat history inside every session (deleted on close)
+- Powered by Google Gemini 🧠
 - Talks in teen-ish slang
 - Chat about school, mental health, career or anything!""")
 
@@ -41,8 +41,10 @@ for msg in st.session_state.chat_history:
 
 # Handle user input
 if prompt := st.chat_input("Type your message..."):
-    # Display user message
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.chat_history.append({"role": "user", "content": prompt})
+    
     with st.chat_message("user"):
         st.markdown(prompt)
     
@@ -50,11 +52,21 @@ if prompt := st.chat_input("Type your message..."):
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                response = st.session_state.chat.send_message(prompt)
-                reply = response.text
+                # Prepare messages with system prompt
+                api_messages = [SYSTEM_PROMPT] + st.session_state.messages
+                
+                response = client.chat.completions.create(
+                    model="gemini-1.5-flash",
+                    messages=api_messages,
+                    max_tokens=500,
+                    temperature=0.7
+                )
+                
+                reply = response.choices[0].message.content
                 st.markdown(reply)
                 
                 # Save assistant message
+                st.session_state.messages.append({"role": "assistant", "content": reply})
                 st.session_state.chat_history.append({"role": "assistant", "content": reply})
                 
             except Exception as e:
