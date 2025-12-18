@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://api.deepseek.com",
+    base_url="https://api.deepseek.com/v1",
     api_key=st.secrets["openai"]["api_key"],
 )
 
@@ -53,3 +53,4 @@ if prompt := st.chat_input("Type your message..."):
     
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.session_state.chat_history.append({"role": "assistant", "content": reply})
+
