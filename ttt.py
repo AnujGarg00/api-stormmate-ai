@@ -3,7 +3,7 @@ from openai import OpenAI
 
 # Replace YOUR_API_KEY_HERE with your free OpenRouter API key
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
+    base_url="https://api.deepseek.com",
     api_key=st.secrets["openai"]["api_key"],
 )
 
@@ -60,4 +60,5 @@ for sender, msg in st.session_state.chat:
             f"<span style='color:#00d4ff'>**{sender}:** {msg}</span>",
             unsafe_allow_html=True
         )
+
 
